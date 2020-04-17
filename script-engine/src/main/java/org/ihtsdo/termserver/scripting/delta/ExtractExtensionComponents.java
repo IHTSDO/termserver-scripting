@@ -36,8 +36,8 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 		ExtractExtensionComponents delta = new ExtractExtensionComponents();
 		try {
 			delta.runStandAlone = true;
-			//delta.moduleId = "911754081000004104"; //Nebraska Lexicon Pathology Synoptic module
-			delta.moduleId = "731000124108";  //US Module
+			delta.moduleId = "911754081000004104"; //Nebraska Lexicon Pathology Synoptic module
+			//delta.moduleId = "731000124108";  //US Module
 			//delta.moduleId = "32506021000036107"; //AU Module
 			delta.init(args);
 			delta.getArchiveManager().loadEditionArchive = true;
@@ -109,11 +109,8 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 	private void outputModifiedComponents() throws TermServerScriptException {
 		info ("Outputting to RF2...");
 		for (Concept thisConcept : gl.getAllConcepts()) {
-/*			if (thisConcept.getConceptId().equals("820511000168109")) {
-				debug ("Here");
-			}*/
 			try {
-				outputRF2((Concept)thisConcept, false);  //Don't check desc/rels if concept not modified.
+				outputRF2((Concept)thisConcept, true);  //Do check desc/rels if concept not modified.
 			} catch (TermServerScriptException e) {
 				report ((Concept)thisConcept, null, Severity.CRITICAL, ReportActionType.API_ERROR, "Exception while processing: " + e.getMessage() + " : " + SnomedUtils.getStackTrace(e));
 			}
@@ -121,6 +118,7 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 	}
 
 	private void switchModule(Concept c) throws TermServerScriptException {
+		boolean conceptAlreadyTransferred = false;
 		if (c.getModuleId() ==  null) {
 			report (c, null, Severity.HIGH, ReportActionType.VALIDATION_ERROR, "Concept does not specify a module!  Unable to switch.");
 			return;
@@ -136,18 +134,20 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 			
 			//It's possible that this concept has already been transferred by an earlier run if it was identified as a dependency, so 
 			//we have to check every concept.
-			Concept dependency = loadConcept(c);
-			if (!dependency.equals(NULL_CONCEPT)) {
-				report (c, null, Severity.MEDIUM, ReportActionType.NO_CHANGE, "Concept has already been promoted to core (possibly as a dependency)", c.getDefinitionStatus().toString(), parents);
-				return;
-			}
+			Concept conceptOnTS = loadConcept(c);
 			
-			if (allIdentifiedConcepts.contains(c)) {
-				report (c, null, Severity.LOW, ReportActionType.CONCEPT_CHANGE_MADE, "Specified concept, module set to core", c.getDefinitionStatus().toString(), parents);
+			if (!conceptOnTS.equals(NULL_CONCEPT)) {
+				conceptAlreadyTransferred = true;
+				report (c, null, Severity.MEDIUM, ReportActionType.NO_CHANGE, "Concept has already been promoted to core (possibly as a dependency).   Checking descriptions and relationships", c.getDefinitionStatus().toString(), parents);
 			} else {
-				report (c, null, Severity.MEDIUM, ReportActionType.CONCEPT_CHANGE_MADE, "Dependency concept, module set to core", c.getDefinitionStatus().toString(), parents);
+				if (allIdentifiedConcepts.contains(c)) {
+					report (c, null, Severity.LOW, ReportActionType.CONCEPT_CHANGE_MADE, "Specified concept, module set to core", c.getDefinitionStatus().toString(), parents);
+				} else {
+					report (c, null, Severity.MEDIUM, ReportActionType.CONCEPT_CHANGE_MADE, "Dependency concept, module set to core", c.getDefinitionStatus().toString(), parents);
+				}
+				c.setModuleId(targetModuleId);
+				incrementSummaryInformation("Concepts moved");
 			}
-			c.setModuleId(targetModuleId);
 			allModifiedConcepts.add(c);
 			
 			//If we have no stated modelling (either stated relationships, or those extracted from an axiom, 
@@ -155,44 +155,51 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 			if (c.getRelationships(CharacteristicType.STATED_RELATIONSHIP, ActiveState.ACTIVE).size() == 0) {
 				convertInferredRelsToAxiomEntry(c);
 			}
-			
-			incrementSummaryInformation("Concepts moved");
 		} else {
 			if (allIdentifiedConcepts.contains(c)) {
 				if (c.getModuleId().equals(targetModuleId)) {
-					report (c, null, Severity.HIGH, ReportActionType.NO_CHANGE, "Specified concept already in target module: " + c.getModuleId());
+					report (c, null, Severity.HIGH, ReportActionType.NO_CHANGE, "Specified concept already in target module: " + c.getModuleId() + " checking for additional modeling in source module.");
 				} else {
 					throw new IllegalStateException("This should have been picked up in the block above");
 				}
 			}
-			return;
 		}
 		
+		boolean subComponentsMoved = false;
 		for (Description d : c.getDescriptions(ActiveState.ACTIVE)) {
-			if (d.getModuleId().equals(moduleId)) {
+			if (!d.getModuleId().equals(targetModuleId) && !d.getModuleId().equals(SCTID_MODEL_MODULE)) {
 				moveDescriptionToTargetModule(d);
+				subComponentsMoved = true;
 			}
 		}
 		
 		for (Relationship r : c.getRelationships(CharacteristicType.STATED_RELATIONSHIP, ActiveState.ACTIVE)) {
-			if (r.getModuleId().equals(moduleId)) {
+			if (!r.getModuleId().equals(targetModuleId) && !r.getModuleId().equals(SCTID_MODEL_MODULE)) {
 				if (r.isActive() && !r.fromAxiom()) {
 					info ("Unexpected active stated relationship: "+ r);
 				}
 				moveRelationshipToTargetModule(r);
+				subComponentsMoved = true;
 			}
 		}
 		
+		/* Policy is not to moved inferred modeling
 		for (Relationship r : c.getRelationships(CharacteristicType.INFERRED_RELATIONSHIP, ActiveState.ACTIVE)) {
-			if (r.getModuleId().equals(moduleId)) {
+			if ((!r.getModuleId().equals(targetModuleId) && !r.getModuleId().equals(SCTID_MODEL_MODULE)) {
 				moveRelationshipToTargetModule(r);
+				subComponentsMoved = true;
 			}
-		}
+		}*/
 		
 		for (AxiomEntry a : c.getAxiomEntries()) {
-			if (a.getModuleId().equals(moduleId)) {
+			if ((!a.getModuleId().equals(targetModuleId) && !a.getModuleId().equals(SCTID_MODEL_MODULE))) {
 				moveAxiomToTargetModule(c,a);
+				subComponentsMoved = true;
 			}
+		}
+		
+		if (conceptAlreadyTransferred && subComponentsMoved) {
+			incrementSummaryInformation("Exisitng concepts additional modeling moved.");
 		}
 	}
 
