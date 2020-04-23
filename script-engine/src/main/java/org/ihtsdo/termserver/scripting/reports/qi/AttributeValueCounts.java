@@ -54,7 +54,7 @@ public class AttributeValueCounts extends TermServerReport implements ReportClas
 	public void init (JobRun run) throws TermServerScriptException {
 		ReportSheetManager.targetFolderId = "1F-KrAwXrXbKj5r-HBLM0qI5hTzv-JgnU"; //Ad-hoc Reports
 		additionalReportColumns = "FSN, SemTag, Depth, Raw Concept Count, Adjusted Concept Count, Not-Including Descendants, Adjusted Not-Including Descendants, Parents, GrandParents";
-		getArchiveManager().populateHierarchyDepth = true;
+		getArchiveManager().setPopulateHierarchyDepth(true);
 		super.init(run);
 		
 		String attribStr = run.getParamValue(ATTRIBUTE_TYPE);

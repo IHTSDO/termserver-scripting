@@ -27,7 +27,7 @@ public class NewConcepts extends TermServerReport implements ReportClass {
 	}
 	
 	public void init (JobRun run) throws TermServerScriptException {
-		getArchiveManager().populateReleasedFlag=true;
+		getArchiveManager().setPopulateReleasedFlag(true);
 		headers = "SCTID, FSN, Semtag, Author, Task, Creation Date";
 		additionalReportColumns="";
 		ReportSheetManager.targetFolderId = "1F-KrAwXrXbKj5r-HBLM0qI5hTzv-JgnU"; //Ad-hoc Reports

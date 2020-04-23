@@ -91,13 +91,13 @@ public class SummaryComponentStats extends TermServerReport implements ReportCla
 			projectKey = getJobRun().getParamValue(THIS_RELEASE);
 		}
 		getProject().setKey(prevRelease);
-		getArchiveManager().loadEditionArchive = true;
+		getArchiveManager().setLoadEditionArchive(true);
 		getArchiveManager().loadProjectSnapshot(fsnOnly);
 		HistoricStatsGenerator statsGenerator = new HistoricStatsGenerator(this);
 		statsGenerator.runJob();
 		
 		if (compareTwoSnapshots) {
-			getArchiveManager().loadEditionArchive = true;
+			getArchiveManager().setLoadEditionArchive(true);
 			setProject(new Project(projectKey));
 			getArchiveManager().loadProjectSnapshot(false);
 			//Descriptions for the root concept are a quick way to find the effeciveTime
@@ -105,7 +105,7 @@ public class SummaryComponentStats extends TermServerReport implements ReportCla
 			info ("Detected this effective time as " + thisEffectiveTime);
 		} else {
 			//Now we can carry on an add the delta on top
-			getArchiveManager().loadEditionArchive = false;
+			getArchiveManager().setLoadEditionArchive(false);
 			getProject().setKey(projectKey);
 			File delta = getArchiveManager().generateDelta(project);
 			loadArchive(delta, false, "Delta", false);

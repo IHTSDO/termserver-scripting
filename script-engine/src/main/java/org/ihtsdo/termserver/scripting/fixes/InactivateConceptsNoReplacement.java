@@ -51,9 +51,9 @@ public class InactivateConceptsNoReplacement extends BatchFix implements RF2Cons
 			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
 			fix.selfDetermining = true;
 			fix.maxFailures = Integer.MAX_VALUE;
-			fix.getArchiveManager().populateReleasedFlag = true;
+			fix.getArchiveManager().setPopulateReleasedFlag(true);
 			fix.init(args);
-			//fix.getArchiveManager().populateReleasedFlag = true;
+			//fix.getArchiveManager().setPopulateReleasedFlag(true);
 			fix.loadProjectSnapshot(true);
 			fix.postInit();
 			fix.processFile();

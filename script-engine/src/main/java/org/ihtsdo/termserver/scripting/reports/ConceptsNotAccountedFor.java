@@ -2,7 +2,6 @@ package org.ihtsdo.termserver.scripting.reports;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.ReportClass;
@@ -41,7 +40,7 @@ public class ConceptsNotAccountedFor extends TermServerReport implements ReportC
 		additionalReportColumns="FSN, Descendants NOC, Already accounted, SIMPLE, PURE_CO, COMPLEX, COMPLEX_NO_MORPH, NONE";
 		run.setParameter(SUB_HIERARCHY, CLINICAL_FINDING.toString());
 		super.init(run);
-		getArchiveManager().allowStaleData = true;
+		getArchiveManager().setAllowStaleData(true);
 	}
 
 	public void postInit() throws TermServerScriptException {

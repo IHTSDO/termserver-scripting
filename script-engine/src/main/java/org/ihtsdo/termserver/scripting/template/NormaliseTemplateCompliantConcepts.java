@@ -314,7 +314,7 @@ public class NormaliseTemplateCompliantConcepts extends TemplateFix {
 		//Ensure our ECL matches more than 0 concepts.  This will also cache the result
 		boolean expectLargeResults = !safetyProtocols;
 		boolean useLocalStoreIfSimple = false;
-		if (!getArchiveManager().allowStaleData && findConcepts(subHierarchyECL, false, expectLargeResults, useLocalStoreIfSimple).size() == 0) {
+		if (!getArchiveManager().isAllowStaleData() && findConcepts(subHierarchyECL, false, expectLargeResults, useLocalStoreIfSimple).size() == 0) {
 			throw new TermServerScriptException(subHierarchyECL + " returned 0 rows");
 		}
 	}

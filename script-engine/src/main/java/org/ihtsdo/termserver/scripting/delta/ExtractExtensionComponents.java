@@ -40,7 +40,7 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 			//delta.moduleId = "731000124108";  //US Module
 			//delta.moduleId = "32506021000036107"; //AU Module
 			delta.init(args);
-			delta.getArchiveManager().loadEditionArchive = true;
+			delta.getArchiveManager().setLoadEditionArchive(true);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
 			delta.loadProjectSnapshot(false);  //Not just FSN, load all terms with lang refset also
 			//We won't incude the project export in our timings

@@ -30,7 +30,7 @@ public class DuplicateDescriptions extends BatchFix implements RF2Constants{
 			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-Hoc Batch Updates
 			//fix.runStandAlone = false;  //Was causing issues with historical associations not being set
 			fix.selfDetermining = true;
-			fix.getArchiveManager().populateReleasedFlag = true;
+			fix.getArchiveManager().setPopulateReleasedFlag(true);
 			fix.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
 			fix.loadProjectSnapshot(true); //Just 

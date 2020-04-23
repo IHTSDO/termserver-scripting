@@ -47,7 +47,7 @@ public class GenerateWorkDoneStatsWithTempateTypes extends TermServerReport {
 		try {
 			ReportSheetManager.targetFolderId = "1YoJa68WLAMPKG6h4_gZ5-QT974EU9ui6"; //QI / Stats
 			report.additionalReportColumns = "FSN, SemTag, Depth, Counted elsewhere, Phase 1, Phase 2, Out of Scope, Total, Orphanet (not included)";
-			ArchiveManager.getArchiveManager(report, null).populateHierarchyDepth = true;
+			ArchiveManager.getArchiveManager(report, null).setPopulateHierarchyDepth(true);
 			report.init(args);
 			report.loadProjectSnapshot(false);  //Load all descriptions
 			report.postLoadInit();

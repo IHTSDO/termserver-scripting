@@ -1523,7 +1523,7 @@ public abstract class TermServerScript implements RF2Constants {
 	
 	public void offlineMode(boolean offline) {
 		if (offline) {
-			getArchiveManager().allowStaleData = true;
+			getArchiveManager().setAllowStaleData(true);
 		}
 		this.offlineMode = offline;
 	}

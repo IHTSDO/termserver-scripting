@@ -43,9 +43,9 @@ public class KPIPatternsReport extends TermServerReport implements ReportClass {
 		ReportSheetManager.targetFolderId = "15WXT1kov-SLVi4cvm2TbYJp_vBMr4HZJ"; //Release QA
 		super.init(run);
 		runStandAlone = false; //We need to load previous previous for real
-		getArchiveManager().populateReleasedFlag = true;
+		getArchiveManager().setPopulateReleasedFlag(true);
 		if (!StringUtils.isNumeric(project.getKey())) {
-			getArchiveManager().populatePreviousTransativeClosure = true;
+			getArchiveManager().setPopulatePreviousTransativeClosure(true);
 			try {
 				previousPreviousRelease = getArchiveManager().getPreviousPreviousBranch(project);
 			} catch (Exception e) {

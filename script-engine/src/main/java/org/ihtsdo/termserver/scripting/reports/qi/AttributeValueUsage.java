@@ -38,7 +38,7 @@ public class AttributeValueUsage extends TermServerReport implements ReportClass
 		headers = ",Attribute Value, count, cumulativeCount";
 		additionalReportColumns="";
 		attributeTypeStr = jobRun.getMandatoryParamValue(ATTRIBUTE_TYPE);
-		ArchiveManager.getArchiveManager(this, null).populateHierarchyDepth = true;
+		ArchiveManager.getArchiveManager(this, null).setPopulateHierarchyDepth(true);
 		super.init(jobRun);
 	}
 

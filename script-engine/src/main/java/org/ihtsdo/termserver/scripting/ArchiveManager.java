@@ -40,12 +40,12 @@ public class ArchiveManager implements RF2Constants {
 	protected GraphLoader gl;
 	protected TermServerScript ts;
 	protected ApplicationContext appContext;
-	public boolean allowStaleData = false;
-	public boolean loadDependencyPlusExtensionArchive = false;
-	public boolean loadEditionArchive = false;
-	public boolean populateHierarchyDepth = true;  //Term contains X needs this
-	public boolean populateReleasedFlag = false;
-	public boolean populatePreviousTransativeClosure = false;
+	private boolean allowStaleData = false;
+	private boolean loadDependencyPlusExtensionArchive = false;
+	private boolean loadEditionArchive = false;
+	private boolean populateHierarchyDepth = true;  //Term contains X needs this
+	private boolean populateReleasedFlag = false;
+	private boolean populatePreviousTransativeClosure = false;
 	private boolean releasedFlagPopulated = false;
 	
 	private Project currentlyHeldInMemory;
@@ -562,5 +562,61 @@ public class ArchiveManager implements RF2Constants {
 		} catch (TermServerScriptException | IOException e) {
 			throw new IllegalStateException("Unable to load " + path + " due to " + e.getMessage(), e);
 		}
+	}
+
+	public boolean isAllowStaleData() {
+		return allowStaleData;
+	}
+
+	public void setAllowStaleData(boolean allowStaleData) {
+		this.allowStaleData = allowStaleData;
+	}
+
+	public boolean isLoadDependencyPlusExtensionArchive() {
+		return loadDependencyPlusExtensionArchive;
+	}
+
+	public void setLoadDependencyPlusExtensionArchive(boolean loadDependencyPlusExtensionArchive) {
+		this.loadDependencyPlusExtensionArchive = loadDependencyPlusExtensionArchive;
+	}
+
+	public boolean isLoadEditionArchive() {
+		return loadEditionArchive;
+	}
+
+	public void setLoadEditionArchive(boolean loadEditionArchive) {
+		this.loadEditionArchive = loadEditionArchive;
+	}
+
+	public boolean isPopulateHierarchyDepth() {
+		return populateHierarchyDepth;
+	}
+
+	public void setPopulateHierarchyDepth(boolean populateHierarchyDepth) {
+		this.populateHierarchyDepth = populateHierarchyDepth;
+	}
+
+	public boolean isPopulateReleasedFlag() {
+		return populateReleasedFlag;
+	}
+
+	public void setPopulateReleasedFlag(boolean populateReleasedFlag) {
+		this.populateReleasedFlag = populateReleasedFlag;
+	}
+
+	public boolean isPopulatePreviousTransativeClosure() {
+		return populatePreviousTransativeClosure;
+	}
+
+	public void setPopulatePreviousTransativeClosure(boolean populatePreviousTransativeClosure) {
+		this.populatePreviousTransativeClosure = populatePreviousTransativeClosure;
+	}
+
+	public boolean isReleasedFlagPopulated() {
+		return releasedFlagPopulated;
+	}
+
+	public void setReleasedFlagPopulated(boolean releasedFlagPopulated) {
+		this.releasedFlagPopulated = releasedFlagPopulated;
 	}
 }

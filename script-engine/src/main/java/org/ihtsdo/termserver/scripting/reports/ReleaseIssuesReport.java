@@ -84,7 +84,7 @@ public class ReleaseIssuesReport extends TermServerReport implements ReportClass
 		includeLegacyIssues = run.getParameters().getMandatoryBoolean(INCLUDE_ALL_LEGACY_ISSUES);
 		additionalReportColumns = "FSN, Semtag, Issue, Legacy, C/D/R Active, Detail";
 		cache = gl.getDescendantsCache();
-		getArchiveManager().populateReleasedFlag = true;
+		getArchiveManager().setPopulateReleasedFlag(true);
 	}
 	
 	public void postInit() throws TermServerScriptException {

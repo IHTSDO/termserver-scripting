@@ -52,7 +52,7 @@ public class RemodelConceptsPerSpreadsheet extends BatchFix implements RF2Consta
 			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
 			fix.maxFailures = Integer.MAX_VALUE;
 			fix.expectNullConcepts = true;
-			fix.getArchiveManager().populateReleasedFlag = true;
+			fix.getArchiveManager().setPopulateReleasedFlag(true);
 			fix.init(args);
 			fix.loadProjectSnapshot(false); //Load all descriptions
 			fix.postInit();

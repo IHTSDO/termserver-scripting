@@ -43,7 +43,7 @@ public class FixReusedAssociations extends DeltaGenerator implements RF2Constant
 			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m"; //Ad-Hoc Batch Updates
 			delta.newIdsRequired = false; // We'll only be modifying existing descriptions
 			delta.init(args);
-			delta.getArchiveManager().allowStaleData = true;
+			delta.getArchiveManager().setAllowStaleData(true);
 			delta.loadProjectSnapshot(false); //Need all descriptions loaded.
 			delta.process();
 			delta.flushFiles(false, true); //Need to flush files before zipping

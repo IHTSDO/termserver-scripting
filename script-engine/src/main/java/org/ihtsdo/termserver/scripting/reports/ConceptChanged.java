@@ -43,7 +43,7 @@ public class ConceptChanged extends TermServerReport implements ReportClass {
 	public void init (JobRun run) throws TermServerScriptException {
 		ReportSheetManager.targetFolderId = "1F-KrAwXrXbKj5r-HBLM0qI5hTzv-JgnU"; //Ad-hoc Reports
 		ReportSheetManager.setMaxColumns(18);
-		getArchiveManager().populateReleasedFlag = true;
+		getArchiveManager().setPopulateReleasedFlag(true);
 		subHierarchyECL = run.getParamValue(ECL);
 		super.init(run);
 	}
