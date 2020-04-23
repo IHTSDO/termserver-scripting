@@ -13,6 +13,7 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.IdGenerator;
 import org.ihtsdo.termserver.scripting.TermServerScript;
 import org.ihtsdo.termserver.scripting.domain.*;
+import org.snomed.otf.scheduler.domain.JobRun;
 
 public abstract class DeltaGenerator extends TermServerScript {
 	
@@ -55,7 +56,6 @@ public abstract class DeltaGenerator extends TermServerScript {
 	protected Map<ComponentType, String> fileMap = new HashMap<ComponentType, String>();
 	
 	protected void init (String[] args) throws TermServerScriptException {
-		super.init(args);
 		
 		for (int x=0; x<args.length; x++) {
 			if (args[x].equals("-m")) {
@@ -77,7 +77,25 @@ public abstract class DeltaGenerator extends TermServerScript {
 				relIdGenerator.isExtension(isExtension);
 			}
 		}
+		
+		super.init(args);
 
+		//Don't add to previously exported data
+		File outputDir = new File (outputDirName);
+		int increment = 0;
+		while (outputDir.exists()) {
+			String proposedOutputDirName = outputDirName + "_" + (++increment) ;
+			outputDir = new File(proposedOutputDirName);
+		}
+		outputDirName = outputDir.getName();
+		packageRoot = outputDirName + File.separator + "SnomedCT_RF2Release_" + edition +"_";
+		packageDir = packageRoot + today + File.separator;
+		info ("Outputting data to " + packageDir);
+	}
+	
+	protected void checkSettingsWithUser(JobRun jobRun) throws TermServerScriptException {
+		super.checkSettingsWithUser(jobRun);
+		
 		print ("Targetting which namespace? [" + nameSpace + "]: ");
 		String response = STDIN.nextLine().trim();
 		if (!response.isEmpty()) {
@@ -118,17 +136,21 @@ public abstract class DeltaGenerator extends TermServerScript {
 			throw new TermServerScriptException("Command line arguments must supply a list of available sctid using the -iC/D/R option, or specify newIdsRequired=false");
 		}
 		
-		//Don't add to previously exported data
-		File outputDir = new File (outputDirName);
-		int increment = 0;
-		while (outputDir.exists()) {
-			String proposedOutputDirName = outputDirName + "_" + (++increment) ;
-			outputDir = new File(proposedOutputDirName);
+		boolean dependencySpecified = (dependencyArchive != null);
+		String choice = "Y";
+		if (!dependencySpecified) {
+			info ("Is " + project + " an extension that requires a dependant edition to be loaded first?");
+			print ("Choice Y/N: ");
+			choice = STDIN.nextLine().trim();
 		}
-		outputDirName = outputDir.getName();
-		packageRoot = outputDirName + File.separator + "SnomedCT_RF2Release_" + edition +"_";
-		packageDir = packageRoot + today + File.separator;
-		info ("Outputting data to " + packageDir);
+		if (choice.toUpperCase().equals("Y")) {
+			print ("Please enter the name of a dependent release archive (in releases or S3) [" + dependencyArchive + "]: ");
+			response = STDIN.nextLine().trim();
+			if (!response.isEmpty()) {
+				dependencyArchive = response;
+			}
+		}
+		getArchiveManager().setLoadDependencyPlusExtensionArchive(dependencyArchive != null);
 	}
 	
 	public void postInit() throws TermServerScriptException {

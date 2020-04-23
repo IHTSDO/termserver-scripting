@@ -211,56 +211,35 @@ public abstract class TermServerScript implements RF2Constants {
 	protected void init(String[] args) throws TermServerScriptException {
 		
 		if (args.length < 3) {
-			println("Usage: java <TSScriptClass> [-a author] [-n <taskSize>] [-r <restart position>] [-c <authenticatedCookie>] [-d <Y/N>] [-p <projectName>] -f <batch file Location>");
+			println("Usage: java <TSScriptClass> [-a author] [-n <taskSize>] [-r <restart position>] [-c <authenticatedCookie>] [-d <Y/N>] [-p <projectName>] [-f <batch file Location>] [-dp <dependency file>]");
 			println(" d - dry run");
 			System.exit(-1);
 		}
-		boolean isProjectName = false;
-		boolean isCookie = false;
-		boolean isDryRun = false;
-		boolean isRestart = false;
-		boolean isInputFile = false;
-		boolean isInputFile2 = false;
 	
-		for (String thisArg : args) {
+		for (int x=0; x< args.length; x++) {
+			String thisArg = args[x];
 			if (thisArg.equals("-p")) {
-				isProjectName = true;
+				projectName = args[x+1];
 			} else if (thisArg.equals("-c")) {
-				isCookie = true;
+				authenticatedCookie = args[x+1];
 			} else if (thisArg.equals("-d")) {
-				isDryRun = true;
+				dryRun = args[x+1].toUpperCase().equals("Y");
 			} else if (thisArg.equals("-f")) {
-				isInputFile = true;
-			} else if (thisArg.equals("-f2")) {
-				isInputFile2 = true;
-			} else if (thisArg.equals("-r")) {
-				isRestart = true;
-			} else if (isProjectName) {
-				projectName = thisArg;
-				isProjectName = false;
-			} else if (isDryRun) {
-				dryRun = thisArg.toUpperCase().equals("Y");
-				isDryRun = false;
-			} else if (isRestart) {
-				restartPosition = Integer.parseInt(thisArg);
-				isRestart = false;
-			} else if (isInputFile) {
-				inputFile = new File(thisArg);
+				inputFile = new File(args[x+1]);
 				if (!inputFile.canRead()) {
-					throw new TermServerScriptException ("Unable to read input file " + thisArg);
+					throw new TermServerScriptException ("Unable to read input file " + args[x+1]);
 				}
 				info ("Reading data from " + inputFile.getAbsolutePath());
-				isInputFile = false;
-			} else if (isInputFile2) {
-				inputFile2 = new File(thisArg);
+			} else if (thisArg.equals("-f2")) {
+				inputFile2 = new File(args[x+1]);
 				if (!inputFile2.canRead()) {
-					throw new TermServerScriptException ("Unable to read input file 2 " + thisArg);
+					throw new TermServerScriptException ("Unable to read input file 2 " + args[x+1]);
 				}
-				isInputFile2 = false;
-			}else if (isCookie) {
-				authenticatedCookie = thisArg;
-				isCookie = false;
-			} 
+			} else if (thisArg.equals("-r")) {
+				restartPosition = Integer.parseInt(args[x+1]);
+			} else if (thisArg.equals("-dp")) {
+				dependencyArchive = args[x+1];
+			}
 		}
 		checkSettingsWithUser(null);
 		init();

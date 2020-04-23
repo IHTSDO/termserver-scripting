@@ -40,7 +40,6 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 			//delta.moduleId = "731000124108";  //US Module
 			//delta.moduleId = "32506021000036107"; //AU Module
 			delta.init(args);
-			delta.getArchiveManager().setLoadEditionArchive(true);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
 			delta.loadProjectSnapshot(false);  //Not just FSN, load all terms with lang refset also
 			//We won't incude the project export in our timings
@@ -58,49 +57,51 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 	
 	protected void init (String[] args) throws TermServerScriptException {
 		super.init(args);
-		
-		info ("Select an environment for secondary checking ");
+		additionalReportColumns = "FSN, Semtag, Severity, Action, Info, Details";
+		info ("Select an environment for live secondary checking ");
 		for (int i=0; i < environments.length; i++) {
 			info ("  " + i + ": " + environments[i]);
 		}
-		
 		print ("Choice: ");
 		String choice = STDIN.nextLine().trim();
 		int envChoice = Integer.parseInt(choice);
-		String url = environments[envChoice];
+		String secondaryURL = environments[envChoice];
 		
-		print ("Please enter your authenticated cookie for connection to " + url + " : ");
-		String secondaryCookie = STDIN.nextLine().trim();
-		secondaryConnection = createTSClient(url, secondaryCookie);
-		
-		print ("Specify source module id " + (moduleId==null?": ":"[" + moduleId + "]: "));
-		String response = STDIN.nextLine().trim();
-		if (!response.isEmpty()) {
-			moduleId = response;
+		if (!secondaryURL.equals(url)) {
+			print ("Please enter your authenticated cookie for connection to " + url + " : ");
+			String secondaryCookie = STDIN.nextLine().trim();
+			secondaryConnection = createTSClient(url, secondaryCookie);
+		} else {
+			println ("Existing authentication cookie will be used for secondary connection");
+			secondaryConnection = createTSClient(url, authenticatedCookie);
 		}
 	}
 
 	protected List<Component> processFile() throws TermServerScriptException {
 		allIdentifiedConcepts = super.processFile();
 		addSummaryInformation("Concepts specified", allIdentifiedConcepts.size());
+		initialiseSummaryInformation("Unexpected dependencies included");
 		info ("Extracting specified concepts");
 		for (Component thisComponent : allIdentifiedConcepts) {
 			Concept thisConcept = (Concept)thisComponent;
 			
 			//If we don't have a module id for this identified concept, then it doesn't properly exist in this release
 			if (thisConcept.getModuleId() == null) {
-				report (thisConcept, null, Severity.HIGH, ReportActionType.VALIDATION_ERROR, "Concept specified for extract not found in input Snapshot");
+				report (thisConcept, Severity.CRITICAL, ReportActionType.VALIDATION_ERROR, "Concept specified for extract not found in input Snapshot");
 				continue;
 			}
 			
 			if (!thisConcept.isActive()) {
-				report (thisConcept, null, Severity.HIGH, ReportActionType.VALIDATION_ERROR, "Concept is inactive, skipping");
+				report (thisConcept, Severity.CRITICAL, ReportActionType.VALIDATION_ERROR, "Concept is inactive, skipping");
 				continue;
 			}
 			try {
-				switchModule(thisConcept);
+				if (!switchModule(thisConcept)) {
+					addSummaryInformation("Specified but no movement: " + thisConcept, null);
+					incrementSummaryInformation("Concepts no movement required");
+				}
 			} catch (TermServerScriptException e) {
-				report (thisConcept, null, Severity.CRITICAL, ReportActionType.API_ERROR, "Exception while processing: " + e.getMessage() + " : " + SnomedUtils.getStackTrace(e));
+				report (thisConcept, Severity.CRITICAL, ReportActionType.API_ERROR, "Exception while processing: " + e.getMessage() + " : " + SnomedUtils.getStackTrace(e));
 			}
 		}
 		return allIdentifiedConcepts;
@@ -112,22 +113,22 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 			try {
 				outputRF2((Concept)thisConcept, true);  //Do check desc/rels if concept not modified.
 			} catch (TermServerScriptException e) {
-				report ((Concept)thisConcept, null, Severity.CRITICAL, ReportActionType.API_ERROR, "Exception while processing: " + e.getMessage() + " : " + SnomedUtils.getStackTrace(e));
+				report ((Concept)thisConcept, Severity.CRITICAL, ReportActionType.API_ERROR, "Exception while processing: " + e.getMessage() + " : " + SnomedUtils.getStackTrace(e));
 			}
 		}
 	}
 
-	private void switchModule(Concept c) throws TermServerScriptException {
+	private boolean switchModule(Concept c) throws TermServerScriptException {
 		boolean conceptAlreadyTransferred = false;
 		if (c.getModuleId() ==  null) {
-			report (c, null, Severity.HIGH, ReportActionType.VALIDATION_ERROR, "Concept does not specify a module!  Unable to switch.");
-			return;
+			report (c, Severity.HIGH, ReportActionType.VALIDATION_ERROR, "Concept does not specify a module!  Unable to switch.");
+			return false;
 		}
 		//Switch the module of this concept, then all active descriptions and relationships
 		//As long as the current module is not equal to the target module, we'll switch it
 		if (!c.getModuleId().equals(targetModuleId) && !c.getModuleId().equals(SCTID_MODEL_MODULE)) {
 			if (!c.getModuleId().equals(moduleId)) {
-				report (c, null, Severity.MEDIUM, ReportActionType.VALIDATION_CHECK, "Specified concept in unexpected module, switching anyway", c.getModuleId());
+				report (c, Severity.MEDIUM, ReportActionType.VALIDATION_CHECK, "Specified concept in unexpected module, switching anyway", c.getModuleId());
 			}
 			//Was this concept originally specified, or picked up as a dependency?
 			String parents = parentsToString(c);
@@ -138,12 +139,12 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 			
 			if (!conceptOnTS.equals(NULL_CONCEPT)) {
 				conceptAlreadyTransferred = true;
-				report (c, null, Severity.MEDIUM, ReportActionType.NO_CHANGE, "Concept has already been promoted to core (possibly as a dependency).   Checking descriptions and relationships", c.getDefinitionStatus().toString(), parents);
+				report (c, Severity.MEDIUM, ReportActionType.NO_CHANGE, "Concept has already been moved to " + targetModuleId + " (possibly as a dependency).   Checking descriptions and relationships", c.getDefinitionStatus().toString(), parents);
 			} else {
 				if (allIdentifiedConcepts.contains(c)) {
-					report (c, null, Severity.LOW, ReportActionType.CONCEPT_CHANGE_MADE, "Specified concept, module set to core", c.getDefinitionStatus().toString(), parents);
+					report (c, Severity.LOW, ReportActionType.MODULE_CHANGE_MADE, "Specified concept, module set to " + targetModuleId, c.getDefinitionStatus().toString(), parents);
 				} else {
-					report (c, null, Severity.MEDIUM, ReportActionType.CONCEPT_CHANGE_MADE, "Dependency concept, module set to core", c.getDefinitionStatus().toString(), parents);
+					report (c, Severity.MEDIUM, ReportActionType.CONCEPT_CHANGE_MADE, "Dependency concept, module set to " + targetModuleId, c.getDefinitionStatus().toString(), parents);
 				}
 				c.setModuleId(targetModuleId);
 				incrementSummaryInformation("Concepts moved");
@@ -156,9 +157,10 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 				convertInferredRelsToAxiomEntry(c);
 			}
 		} else {
+			conceptAlreadyTransferred = true;
 			if (allIdentifiedConcepts.contains(c)) {
 				if (c.getModuleId().equals(targetModuleId)) {
-					report (c, null, Severity.HIGH, ReportActionType.NO_CHANGE, "Specified concept already in target module: " + c.getModuleId() + " checking for additional modeling in source module.");
+					report (c, Severity.HIGH, ReportActionType.NO_CHANGE, "Specified concept already in target module: " + c.getModuleId() + " checking for additional modeling in source module.");
 				} else {
 					throw new IllegalStateException("This should have been picked up in the block above");
 				}
@@ -168,8 +170,9 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 		boolean subComponentsMoved = false;
 		for (Description d : c.getDescriptions(ActiveState.ACTIVE)) {
 			if (!d.getModuleId().equals(targetModuleId) && !d.getModuleId().equals(SCTID_MODEL_MODULE)) {
-				moveDescriptionToTargetModule(d);
-				subComponentsMoved = true;
+				if (moveDescriptionToTargetModule(d, conceptAlreadyTransferred)) {
+					subComponentsMoved = true;
+				}
 			}
 		}
 		
@@ -178,8 +181,9 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 				if (r.isActive() && !r.fromAxiom()) {
 					info ("Unexpected active stated relationship: "+ r);
 				}
-				moveRelationshipToTargetModule(r);
-				subComponentsMoved = true;
+				if (moveRelationshipToTargetModule(r, conceptAlreadyTransferred)) {
+					subComponentsMoved = true;
+				}
 			}
 		}
 		
@@ -193,14 +197,19 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 		
 		for (AxiomEntry a : c.getAxiomEntries()) {
 			if ((!a.getModuleId().equals(targetModuleId) && !a.getModuleId().equals(SCTID_MODEL_MODULE))) {
-				moveAxiomToTargetModule(c,a);
+				moveAxiomToTargetModule(c, a, conceptAlreadyTransferred);
 				subComponentsMoved = true;
 			}
 		}
 		
-		if (conceptAlreadyTransferred && subComponentsMoved) {
-			incrementSummaryInformation("Exisitng concepts additional modeling moved.");
+		if (conceptAlreadyTransferred && !subComponentsMoved) {
+			return false;
 		}
+		
+		if (conceptAlreadyTransferred && subComponentsMoved) {
+			incrementSummaryInformation("Existing concepts additional modeling moved.");
+		}
+		return true;
 	}
 
 	private void convertInferredRelsToAxiomEntry(Concept c) {
@@ -234,24 +243,33 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 		return parentsStr.toString();
 	}
 	
-	private void moveAxiomToTargetModule(Concept c, AxiomEntry a) throws TermServerScriptException {
+	private void moveAxiomToTargetModule(Concept c, AxiomEntry a, boolean conceptAlreadyTransferred) throws TermServerScriptException {
 		try {
 			a.setModuleId(targetModuleId);
 			AxiomRepresentation axiomRepresentation = axiomService.convertAxiomToRelationships(a.getOwlExpression());
 			for (Relationship r : AxiomUtils.getRHSRelationships(c, axiomRepresentation)) {
 				//This is only needed to include dependencies. 
 				//The relationship itself is not attached to the concept
-				moveRelationshipToTargetModule(r);
+				moveRelationshipToTargetModule(r, conceptAlreadyTransferred);
 			}
 		} catch (ConversionException e) {
 			throw new TermServerScriptException("Failed to convert axiom for " + c , e);
 		}
 	}
 
-	private void moveRelationshipToTargetModule(Relationship r) throws TermServerScriptException {
+	private boolean moveRelationshipToTargetModule(Relationship r, boolean conceptAlreadyTransferred) throws TermServerScriptException {
+		if (r.getModuleId().equals(targetModuleId)) {
+			return false;
+		}
 		//Switch the relationship.   Also switch both the type and the destination - will return if not needed
 		r.setModuleId(targetModuleId);
-		switchModule(r.getType());
+		if (switchModule(r.getType())) {
+			//Is this an unexpected dependency
+			if (!allIdentifiedConcepts.contains(r.getType())) {
+				incrementSummaryInformation("Unexpected dependencies included");
+				addSummaryInformation("Unexpected type dependency: " + r.getType(), "");
+			}
+		}
 		//Note that switching the target will also recursively work up the hierarchy as parents are also switched
 		//up the hierarchy until a concept owned by the core module is encountered.
 		
@@ -269,7 +287,7 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 					Concept replacement = getReplacement(loadedTarget);
 					String msg = "Target of " + r + " is inactive in MAIN due to " + reason;
 					msg += ". Replacing with " + replacement;
-					report (r.getSource(), null, Severity.CRITICAL, ReportActionType.VALIDATION_CHECK, msg);
+					report (r.getSource(), Severity.CRITICAL, ReportActionType.VALIDATION_CHECK, msg);
 					target = replacement;
 					Relationship newRel = new Relationship(r.getSource(),r.getType(), replacement, r.getGroupId());
 					newRel.setDirty();
@@ -278,8 +296,21 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 					r.getSource().addRelationship(newRel);
 				}
 			}
-			switchModule(target);
+			//Again will recursively switch all dependencies as we're switching a concept here
+			if (switchModule(target)) {
+				//Is this an unexpected dependency
+				if (!allIdentifiedConcepts.contains(target)) {
+					incrementSummaryInformation("Unexpected dependencies included");
+					addSummaryInformation("Unexpected target dependency: " + target, "");
+				}
+			}
 		}
+		
+		//If we didn't need to transfer the concept, then do report the movement of it's sub components.
+		if (conceptAlreadyTransferred) {
+			report (r.getSource(), Severity.MEDIUM, ReportActionType.MODULE_CHANGE_MADE, r, r.getId());
+		}
+		return true;
 	}
 
 	private Concept getReplacement(Concept inactiveConcept) throws TermServerScriptException {
@@ -316,7 +347,11 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 		return loadedConcept;
 	}
 
-	private void moveDescriptionToTargetModule(Description d) throws TermServerScriptException {
+	private boolean moveDescriptionToTargetModule(Description d, boolean conceptAlreadyTransferred) throws TermServerScriptException {
+		if (d.getModuleId().equals(targetModuleId)) {
+			return false;
+		}
+		
 		//First swap the module id, then add in the GB refset 
 		d.setModuleId(targetModuleId);
 		
@@ -342,6 +377,14 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 				d.addAcceptability(gbEntry);
 			}
 		}
+		
+		//If we didn't need to transfer the concept, then do report the movement of it's sub components.
+		if (conceptAlreadyTransferred) {
+			Concept c = gl.getConcept(d.getConceptId());
+			report (c, Severity.MEDIUM, ReportActionType.MODULE_CHANGE_MADE, d, d.getId());
+		}
+		
+		return true;
 	}
 
 	@Override

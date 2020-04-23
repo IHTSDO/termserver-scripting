@@ -181,7 +181,6 @@ public class ArchiveManager implements RF2Constants {
 						throw new TermServerScriptException("Dependency Package " + dependency.getAbsolutePath() + " does not exist");
 					}
 				}
-				
 			}
 			
 			
