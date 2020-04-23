@@ -407,7 +407,11 @@ public class Concept extends Component implements RF2Constants, Comparable<Conce
 	}
 	
 	public void removeRelationship(Relationship r) {
-		if (r.getEffectiveTime() != null) {
+		removeRelationship(r, false);
+	}
+	
+	public void removeRelationship(Relationship r, boolean force) {
+		if (r.getEffectiveTime() != null && !force) {
 			throw new IllegalArgumentException("Attempt to deleted published relationship " + r);
 		}
 		this.relationships.removeAll(Collections.singleton(r));
@@ -775,6 +779,15 @@ public class Concept extends Component implements RF2Constants, Comparable<Conce
 		return results;
 	}
 	
+	public Description getDescription(String term, ActiveState a) {
+		//Return a
+		for (Description d : getDescriptions(a)) {
+			if (d.getTerm().equals(term)) {
+				return d;
+			}
+		}
+		return null;
+	}
 
 	public Description getDescription(String descriptionId) {
 		for (Description d : descriptions) {
@@ -1431,6 +1444,8 @@ public class Concept extends Component implements RF2Constants, Comparable<Conce
 		}
 		return differences;
 	}
+	
+	
 	
 	public List<Description> findDescriptionsContaining(String targetWord) {
 		return findDescriptionsContaining(Collections.singletonList(targetWord));

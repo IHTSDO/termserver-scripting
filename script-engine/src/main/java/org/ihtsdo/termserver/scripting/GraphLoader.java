@@ -37,7 +37,8 @@ public class GraphLoader implements RF2Constants {
 	//Watch that this map is of the TARGET of the association, ie all concepts used in a historical association
 	private Map<Concept, List<AssociationEntry>> historicalAssociations =  new HashMap<Concept, List<AssociationEntry>>();
 	private TransitiveClosure previousTransativeClosure;
-	
+	private Map<Concept, Set<DuplicatePair>> duplicateLangRefsetEntriesMap;
+
 	public StringBuffer log = new StringBuffer();
 	
 	public static GraphLoader getGraphLoader() {
@@ -95,6 +96,9 @@ public class GraphLoader implements RF2Constants {
 		
 		DISEASE.reset();
 		singleton.concepts.put(DISEASE.getConceptId(), DISEASE);
+		
+		DEVICE.reset();
+		singleton.concepts.put(DEVICE.getConceptId(), DEVICE);
 	}
 
 	public Collection <Concept> getAllConcepts() {
@@ -309,6 +313,7 @@ public class GraphLoader implements RF2Constants {
 				fsnMap.put(c.getFsn(), c);
 			}
 		}
+		fsn = fsn.trim().replaceAll(ESCAPED_PIPE, "");
 		return fsnMap.get(fsn);
 	}
 	
@@ -401,16 +406,23 @@ public class GraphLoader implements RF2Constants {
 	public Concept getConcept(String identifier, boolean createIfRequired, boolean validateExists) throws TermServerScriptException {
 		//Have we been passed a full identifier for the concept eg SCTID |FSN| ?
 		if (StringUtils.isEmpty(identifier)) {
-			throw new IllegalArgumentException("Empty SCTID encountered");
+			if (validateExists) {
+				throw new IllegalArgumentException("Empty SCTID encountered");
+			}
+			return null;
 		}
 		if (identifier.contains(PIPE)) {
 			identifier = identifier.split(ESCAPED_PIPE)[0].trim();
 		}
-		String sctId = identifier;
+		String sctId = identifier.trim();
 		
 		//Make sure we're actually being asked for a concept
 		if (sctId.length() < 6 || !isConcept(sctId)) {
-			throw new IllegalArgumentException("Request made for non concept sctid: '" + sctId + "'");
+			if (!createIfRequired && !validateExists && sctId.length() == 0) {
+				return null;
+			} else {
+				throw new IllegalArgumentException("Request made for non concept sctid: '" + sctId + "'");
+			}
 		}
 		Concept c = concepts.get(sctId);
 		if (c == null) {
@@ -525,7 +537,7 @@ public class GraphLoader implements RF2Constants {
 		return loadRelationships(characteristicType, relStream, false, false, false);
 	}
 
-	public void loadLanguageFile(InputStream is) throws IOException, TermServerScriptException {
+	public void loadLanguageFile(InputStream is, Boolean isReleased) throws IOException, TermServerScriptException {
 		BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
 		boolean isHeaderLine = true;
 		String line;
@@ -554,6 +566,12 @@ public class GraphLoader implements RF2Constants {
 				String issue = "";
 				List<LangRefsetEntry> allExisting = d.getLangRefsetEntries(ActiveState.BOTH, langRefsetEntry.getRefsetId());
 				for (LangRefsetEntry existing : allExisting) {
+					//If we have two active for the same description, and neither has an effectiveTime delete the one that hasn't been published
+					//Only if we're loading a delta, otherwise it's published
+					if (!isReleased) {
+						checkForActiveDuplication(d, existing, langRefsetEntry);
+					}
+					
 					if (existing.getEffectiveTime().compareTo(langRefsetEntry.getEffectiveTime()) > 1) {
 						clearToAdd = false;
 						issue = "Existing " + (existing.isActive()? "active":"inactive") +  " langrefset entry taking priority over incoming " + (langRefsetEntry.isActive()? "active":"inactive") + " as later : " + existing;
@@ -591,6 +609,27 @@ public class GraphLoader implements RF2Constants {
 	}
 
 	
+	private void checkForActiveDuplication(Description d, LangRefsetEntry l1, LangRefsetEntry l2) throws TermServerScriptException {
+		if (l1.isActive() && l2.isActive()) {
+			Set<DuplicatePair> duplicates = getLangRefsetDuplicates(d);
+			duplicates.add(new DuplicatePair(l1, l2));  //Keep the first, inactivate (or delete) the second
+			System.out.println("Noting langrefset as duplicate with " + l1.getId() + " : " + l2);
+		}
+	}
+	
+	private Set<DuplicatePair> getLangRefsetDuplicates(Description d) throws TermServerScriptException {
+		Concept c = getConcept(d.getConceptId());
+		if (duplicateLangRefsetEntriesMap == null) {
+			duplicateLangRefsetEntriesMap = new HashMap<>();
+		}
+		Set<DuplicatePair> duplicates = duplicateLangRefsetEntriesMap.get(c);
+		if (duplicates == null) {
+			duplicates = new HashSet<>();
+			duplicateLangRefsetEntriesMap.put(c,  duplicates);
+		}
+		return duplicates;
+	}
+
 	/**
 	 * Recurse hierarchy and set shortest path depth for all concepts
 	 * @throws TermServerScriptException 
@@ -937,5 +976,27 @@ public class GraphLoader implements RF2Constants {
 
 	public void setExcludedModules(HashSet<String> excludedModules) {
 		this.excludedModules = excludedModules;
+	}
+	
+	public Map<Concept, Set<DuplicatePair>> getDuplicateLangRefsetEntriesMap() {
+		return duplicateLangRefsetEntriesMap;
+	}
+	
+	public class DuplicatePair {
+		private Component keep;
+		private Component inactivate;
+		
+		DuplicatePair (Component keep, Component inactivate) {
+			this.keep = keep;
+			this.inactivate = inactivate;
+		}
+		
+		public Component getKeep() {
+			return keep;
+		}
+		public Component getInactivate() {
+			return inactivate;
+		}
+
 	}
 }

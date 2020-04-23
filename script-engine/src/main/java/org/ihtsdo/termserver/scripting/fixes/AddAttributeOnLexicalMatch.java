@@ -56,12 +56,17 @@ public class AddAttributeOnLexicalMatch extends BatchFix {
 		searchTermAttributeMap.put("sterile", new RelationshipTemplate(HAS_DEVICE_CHARAC, gl.getConcept("261029002 |Sterile (qualifier value)|")));
 		*/
 		
-		//DEVICES-111
+		/*DEVICES-111
 		searchTermAttributeMap.put("non-bioabsorbable", new RelationshipTemplate(HAS_DEVICE_CHARAC, gl.getConcept("863965006 |Nonbioabsorbable (qualifier value)|")));
 		searchTermAttributeMap.put("partially-bioabsorbable", new RelationshipTemplate(HAS_DEVICE_CHARAC, gl.getConcept("863968008 |Partially bioabsorbable (qualifier value)|")));
 		searchTermAttributeMap.put("non-absorbable", new RelationshipTemplate(HAS_DEVICE_CHARAC, gl.getConcept("863967003 |Nonabsorbable (qualifier value)|")));
 		searchTermAttributeMap.put("bioabsorbable", new RelationshipTemplate(HAS_DEVICE_CHARAC, gl.getConcept("860574003 |Bioabsorbable (qualifier value)|")));
 		searchTermAttributeMap.put("absorbable", new RelationshipTemplate(HAS_DEVICE_CHARAC, gl.getConcept("863966007 |Absorbable (qualifier value)")));
+		*/
+		
+		//DEVICES-115
+		searchTermAttributeMap.put("custom-made", new RelationshipTemplate(HAS_DEVICE_CHARAC, gl.getConcept("860573009 |Custom-made (qualifier value)| ")));
+		
 		super.postInit();
 	}
 

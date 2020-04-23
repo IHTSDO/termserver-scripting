@@ -1,11 +1,10 @@
-package org.ihtsdo.termserver.scripting.fixes;
+package org.ihtsdo.termserver.scripting;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
-import org.ihtsdo.termserver.scripting.GraphLoader;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.RF2Constants;
 
@@ -15,7 +14,7 @@ public class ClosureCache implements RF2Constants{
 	private GraphLoader gl = null;
 	private Map<Concept, Set<Concept>> closureCache = null;
 	
-	static ClosureCache getClosureCache() {
+	public static ClosureCache getClosureCache() {
 		if (singleton == null) {
 			singleton = new ClosureCache();
 			singleton.closureCache = new HashMap<Concept, Set<Concept>>();
@@ -24,7 +23,7 @@ public class ClosureCache implements RF2Constants{
 		return singleton;
 	}
 	
-	Set<Concept> getClosure(Concept c) throws TermServerScriptException {
+	public Set<Concept> getClosure(Concept c) throws TermServerScriptException {
 		if (!closureCache.containsKey(c)) {
 			Concept preLoadedConcept = gl.getConcept(c.getConceptId());
 			Set<Concept> descendents = preLoadedConcept.getDescendents(NOT_SET);

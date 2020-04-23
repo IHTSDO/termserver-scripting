@@ -168,10 +168,17 @@ public class LangRefsetEntry extends Component implements RF2Constants{
 	
 	@Override
 	public String toString() {
+		return toString(false);
+	}
+	
+	public String toString(boolean detail) {
 		try {
 		return "[ " + getReferencedComponentId() + " is " + 
 				SnomedUtils.translateAcceptability(getAcceptabilityId()) + " in " +
-				getRefsetId() + " ]";
+				getRefsetId() + 
+				(detail? " - ET" + effectiveTime : "" ) +
+				(detail? " - " + id : "" ) +
+				" ]";
 		} catch (Exception e) {
 			return e.getMessage();
 		}
@@ -218,4 +225,5 @@ public class LangRefsetEntry extends Component implements RF2Constants{
 		entry.moduleId = SCTID_CORE_MODULE;
 		return entry;
 	}
+
 }

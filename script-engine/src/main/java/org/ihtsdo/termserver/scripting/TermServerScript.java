@@ -28,6 +28,8 @@ import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import us.monoid.json.JSONException;
+import us.monoid.json.JSONObject;
 import us.monoid.web.Resty;
 
 public abstract class TermServerScript implements RF2Constants {
@@ -794,6 +796,9 @@ public abstract class TermServerScript implements RF2Constants {
 				//If so (or if active), put it back into one
 				Axiom thisAxiom = rel.getAxiom() == null ? a : rel.getAxiom();
 				
+				//The definition status of the axiom needs to match that of the concept
+				thisAxiom.setDefinitionStatus(c.getDefinitionStatus());
+				
 				//Don't add an inactive relationship to an active axiom
 				if (thisAxiom.isActive() != rel.isActive()) {
 					if (!rel.isActive()) {
@@ -824,7 +829,7 @@ public abstract class TermServerScript implements RF2Constants {
 			//And remove relationships that have come from an axiom
 			c.getRelationships(CharacteristicType.STATED_RELATIONSHIP, ActiveState.BOTH)
 				.stream()
-				.forEach(r -> c.removeRelationship(r));
+				.forEach(r -> c.removeRelationship(r, true));   //Safe to remove these if published.
 		}
 	}
 	
@@ -864,6 +869,31 @@ public abstract class TermServerScript implements RF2Constants {
 			report (t, c, Severity.MEDIUM, ReportActionType.API_ERROR, "Failed to delete concept due to " + e.getMessage());
 			return NO_CHANGES_MADE;
 		}
+	}
+	
+	protected int deleteReferenceSetMember(Task t, String uuid) throws TermServerScriptException {
+		try {
+			debug ((dryRun ?"Dry run deleting ":"Deleting ") + uuid );
+			if (!dryRun) {
+				tsClient.deleteRefsetMember(uuid, t.getBranchPath(), false);  //Don't force!
+			}
+			return CHANGE_MADE;
+		} catch (Exception e) {
+			report (t, null, Severity.MEDIUM, ReportActionType.API_ERROR, "Failed to delete refset member " + uuid + " due to " + e.getMessage());
+			return NO_CHANGES_MADE;
+		}
+	}
+	
+	protected int inactivateRefsetMember(Task t, Concept c, Component i, String info) throws JSONException, TermServerScriptException {
+		JSONObject inactivationJson = new JSONObject();
+		inactivationJson.put("id", i.getId());
+		inactivationJson.put("active", false);
+		inactivationJson.put("commitComment", "PWI Duplicate Refset Member fix");
+		debug ( (dryRun? "Dry run ":"") + "Updating state of " + c + info);
+		if (!dryRun) {
+			tsClient.updateRefsetMember(inactivationJson,  t.getBranchPath(), false); //Don't force delete
+		}
+		return CHANGE_MADE;
 	}
 	
 	public Collection<Concept> findConcepts(String ecl) throws TermServerScriptException {
@@ -1116,6 +1146,7 @@ public abstract class TermServerScript implements RF2Constants {
 			for (String thisCriticalIssue : criticalIssues) {
 				recordSummaryText(thisCriticalIssue);
 			}
+			recordSummaryText("Total Critical Issues Encountered: " + criticalIssues.size());
 		}
 		flushFilesSafely(true);
 	}

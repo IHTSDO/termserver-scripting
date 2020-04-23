@@ -35,7 +35,7 @@ public abstract class AllKnownTemplates extends TermServerReport {
 		populateTemplates(subHierarchyStr, templateNames);
 		
 		subHierarchyStr =  "126537000";  //QI-14 |Neoplasm of bone (disorder)|
-		templateNames = new String[] {	"templates/Neoplasm of Bone.json",
+		templateNames = new String[] {	"templates/neoplasm/Neoplasm of Bone.json",
 										"templates/fracture/Pathologic fracture morphology of bone structure co-occurrent and due to Neoplasm of bone.json"};
 		populateTemplates(subHierarchyStr, templateNames);
 		
@@ -151,7 +151,7 @@ public abstract class AllKnownTemplates extends TermServerReport {
 		populateTemplates(subHierarchyStr, templateNames);
 		
 		subHierarchyStr = "109355002 |Carcinoma in situ (disorder)|"; //QI-231
-		templateNames = new String[] {	"templates/Carcinoma in Situ.json" };
+		templateNames = new String[] {	"templates/neoplasm/Carcinoma in Situ.json" };
 		populateTemplates(subHierarchyStr, templateNames);
 		
 		subHierarchyStr = "763158003 |Medicinal product (product)|"; //RP-135
@@ -196,11 +196,11 @@ public abstract class AllKnownTemplates extends TermServerReport {
 		populateTemplates(subHierarchyStr, templateNames);
 		
 		subHierarchyStr = "118616009 |Neoplastic disease of uncertain behavior (disorder)|"; //QI-253 |Neoplastic disease of uncertain behavior| 
-		templateNames = new String[] {	"templates/Neoplastic Disease.json"};
+		templateNames = new String[] {	"templates/neoplasm/Neoplastic Disease.json"};
 		populateTemplates(subHierarchyStr, templateNames);
 
 		subHierarchyStr = "20376005 |Benign neoplastic disease|"; //QI-272
-		templateNames = new String[] {	"templates/Benign Neoplastic Disease.json"};
+		templateNames = new String[] {	"templates/neoplasm/Benign Neoplastic Disease.json"};
 		populateTemplates(subHierarchyStr, templateNames);
 
 		subHierarchyStr = "233776003 |Tracheobronchial disorder|"; //QI-268

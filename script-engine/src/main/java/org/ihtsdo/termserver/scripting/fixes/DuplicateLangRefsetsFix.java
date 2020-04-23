@@ -1,21 +1,68 @@
 package org.ihtsdo.termserver.scripting.fixes;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
-import org.ihtsdo.termserver.scripting.client.TermServerClient;
+import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
+import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
+import org.ihtsdo.termserver.scripting.ValidationFailure;
+import org.ihtsdo.termserver.scripting.GraphLoader.DuplicatePair;
+import org.ihtsdo.termserver.scripting.dao.ReportSheetManager;
+import org.ihtsdo.termserver.scripting.domain.Concept;
+import org.ihtsdo.termserver.scripting.domain.LangRefsetEntry;
 
-
-import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
-import us.monoid.json.JSONObject;
 
-public class DuplicateLangRefsetsFix {
+public class DuplicateLangRefsetsFix extends BatchFix {
+	
+	protected DuplicateLangRefsetsFix(BatchFix clone) {
+		super(clone);
+	}
 
-	public static void main(String[] args) throws JSONException, IOException, TermServerScriptException {
+	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
+		DuplicateLangRefsetsFix fix = new DuplicateLangRefsetsFix(null);
+		try {
+			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
+			fix.selfDetermining = true;
+			fix.getArchiveManager().populateReleasedFlag = true;
+			fix.init(args);
+			fix.loadProjectSnapshot(false);  //Load all descriptions
+			if (fix.gl.getDuplicateLangRefsetEntriesMap() == null) {
+				throw new TermServerScriptException("Graph Loader did not detect any duplicate LangRefsetEntries");
+			}
+			fix.postInit();
+			fix.processFile();
+		} finally {
+			fix.finish();
+		}
+	}
+
+	@Override
+	protected int doFix(Task t, Concept c, String info) throws TermServerScriptException {
+		int changesMade = 0;
+		try {
+			//Find all refsetIds to be deleted for this concept
+			for (DuplicatePair dups : gl.getDuplicateLangRefsetEntriesMap().get(c)) {
+				LangRefsetEntry l1 = (LangRefsetEntry)dups.getKeep();
+				LangRefsetEntry l2 = (LangRefsetEntry)dups.getInactivate();
+				report (t, c, Severity.LOW, ReportActionType.REFSET_MEMBER_REMOVED, l2.toString(true));
+				report (t, c, Severity.LOW, ReportActionType.NO_CHANGE, l1.toString(true));
+				changesMade += inactivateRefsetMember(t, c, l2, info);
+			}
+		} catch (Exception e) {
+			throw new TermServerScriptException("Failed to update refset entry for " + c, e);
+		}
+		return changesMade;
+	}
+	
+	@Override
+	protected List<Component> identifyComponentsToProcess() throws TermServerScriptException {
+		info ("Identifying concepts to process");
+		return new ArrayList<>(gl.getDuplicateLangRefsetEntriesMap().keySet());
+	}
+
+/*	public static void main(String[] args) throws JSONException, IOException, TermServerScriptException {
 		String url = "http://localhost:8080/";
 		//CONREQEXT-1715
 		String branch = "MAIN/CONREQEXT/CONREQEXT-1740";
@@ -74,5 +121,5 @@ public class DuplicateLangRefsetsFix {
 				}
 			}
 		}
-	}
+	}*/
 }

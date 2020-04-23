@@ -463,11 +463,11 @@ public class TermServerClient {
 		}
 	}
 
-	public void deleteRefsetMember(String langRefMemberId, String branch, boolean toForce) throws TermServerScriptException {
+	public void deleteRefsetMember(String refsetMemberId, String branch, boolean toForce) throws TermServerScriptException {
 		
 		try {
-			resty.json(getRefsetMemberUpdateUrl(langRefMemberId, branch, toForce), Resty.delete());
-			logger.info("deleted refset member id:" + langRefMemberId);
+			resty.json(getRefsetMemberUpdateUrl(refsetMemberId, branch, toForce), Resty.delete());
+			logger.info("deleted refset member id:" + refsetMemberId);
 		} catch (IOException e) {
 			throw new TermServerScriptException(e);
 		}

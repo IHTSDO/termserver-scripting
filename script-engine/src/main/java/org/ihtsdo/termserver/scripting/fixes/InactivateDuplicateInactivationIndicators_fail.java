@@ -12,6 +12,7 @@ import org.ihtsdo.termserver.scripting.client.TermServerClient;
 
 import org.ihtsdo.termserver.scripting.domain.*;
 
+import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
 
 /*
@@ -44,25 +45,18 @@ public class InactivateDuplicateInactivationIndicators_fail extends BatchFix imp
 	}
 
 	@Override
-	public int doFix(Task task, Concept concept, String info) throws TermServerScriptException {
+	public int doFix(Task t, Concept c, String info) throws TermServerScriptException {
 		//Concept loadedConcept = loadConcept(concept, task.getBranchPath());  
 		//We don't need the browser version of the concept in this case since we're working with the 
 		//Refset endpoint.
-		int changesMade = fixInactivationIndicators(task, concept);
+		int changesMade = fixInactivationIndicators(t, c);
 		if (changesMade > 0) {
-			for (InactivationIndicatorEntry i : concept.getInactivationIndicatorEntries()) {
+			for (InactivationIndicatorEntry i : c.getInactivationIndicatorEntries()) {
 				if (i.isDirty() && !i.isActive()) {
 					try {
-						JSONObject inactivationJson = new JSONObject();
-						inactivationJson.put("id", i.getId());
-						inactivationJson.put("active", false);
-						inactivationJson.put("commitComment", "PWI Duplication inactivation indicator fix");
-						debug ("Updating state of " + concept + info);
-						if (!dryRun) {
-							tsClient.updateRefsetMember(inactivationJson,  task.getBranchPath(), false); //Don't force delete
-						}
+						inactivateRefsetMember(t, c, i, info);
 					} catch (Exception e) {
-						report(task, concept, Severity.CRITICAL, ReportActionType.API_ERROR, "Failed to save changed inactivation indicator " + i + " to TS: " + ExceptionUtils.getStackTrace(e));
+						report(t, c, Severity.CRITICAL, ReportActionType.API_ERROR, "Failed to save changed inactivation indicator " + i + " to TS: " + ExceptionUtils.getStackTrace(e));
 					}
 				}
 			}

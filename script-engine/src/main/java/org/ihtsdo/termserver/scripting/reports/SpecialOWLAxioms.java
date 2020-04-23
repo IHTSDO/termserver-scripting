@@ -46,28 +46,30 @@ public class SpecialOWLAxioms extends TermServerReport implements ReportClass {
 	}
 	
 	public void postInit() throws TermServerScriptException {
-		String[] columnHeadings = new String[] {"Concept, Type, OWL",
-				"Concept, FSN, SemTag, ConceptActive, isTransitive, isReflexive, isRoleChain, OWL"};
-		String[] tabNames = new String[] {	"Additional + GCIs",
-				"Special Axioms"};
+
+		String[] columnHeadings = new String[] {"Concept, FSN, SemTag, ConceptActive, isTransitive, isReflexive, isRoleChain, OWL",
+				"Concept, Type, OWL"};
+
+		String[] tabNames = new String[] {"Special Axioms" ,
+				"Additional + GCIs"};
 		super.postInit(tabNames, columnHeadings, false);
 	}
 	
 	public void runJob() throws TermServerScriptException {
 		for (Concept c : subHierarchy.getDescendents(NOT_SET)) {
 			for (Axiom a : c.getAdditionalAxioms()) {
-				report (c, "Additional Axiom", a);
+				report (SECONDARY_REPORT, c, "Additional Axiom", a);
 				countIssue(c);
 			}
 			
 			for (Axiom a : c.getGciAxioms()) {
-				report (c, "GCI Axiom", a);
+				report (SECONDARY_REPORT, c, "GCI Axiom", a);
 				countIssue(c);
 			}
 			
 			if (c.getObjectPropertyAxiomRepresentation() != null) {
 				ObjectPropertyAxiomRepresentation axiom = c.getObjectPropertyAxiomRepresentation();
-				report (SECONDARY_REPORT, c, 
+				report (PRIMARY_REPORT, c,
 						c.isActive(),
 						axiom.isTransitive(),
 						axiom.isReflexive(),

@@ -299,9 +299,16 @@ public class NormaliseTemplateCompliantConcepts extends TemplateFix {
 		
 		subHierarchyECL = "<< 372087000 |Primary malignant neoplasm (disorder)|"; //QI-383
 		templateNames = new String[] {	"templates/neoplasm/primary malignant neoplasm.json"};
-		*/
+		
 		subHierarchyECL = "<<  64572001 |Disease (disorder)|  :  116676008 |Associated morphology (attribute)|  = <<  107666005 |Fluid disturbance (morphologic abnormality)|"; //QI-525
 		templateNames = new String[] {	"templates/fluid disturbance.json"};
+		
+		subHierarchyECL = "<<  282100009 |Adverse reaction caused by substance (disorder)|";
+		templateNames = new String[] {	"templates/Adverse Reaction.json"};
+		*/
+		
+		subHierarchyECL = "<<  419199007 |Allergy to substance (disorder)|";  //QI-609
+		templateNames = new String[] {	"templates/Allergy to Substance.json"};
 		
 		super.init(args);
 		//Ensure our ECL matches more than 0 concepts.  This will also cache the result

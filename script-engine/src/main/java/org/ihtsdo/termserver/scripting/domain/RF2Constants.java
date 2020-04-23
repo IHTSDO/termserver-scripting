@@ -84,6 +84,7 @@ public interface RF2Constants {
 	static Concept COMPLICATION = new Concept ("116223007", "Complication (disorder)");
 	static Concept DISEASE = new Concept ("64572001", "Disease (disorder)");
 	static Concept EVENT = new Concept("272379006", "Event (event)");
+	static Concept DEVICE = new Concept ("49062001","Device (physical object)");
 	
 	
 	static Concept CAUSE_AGENT = new Concept ("246075003","Causative agent (attribute)");

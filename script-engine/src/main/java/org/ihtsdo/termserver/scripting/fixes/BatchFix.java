@@ -311,7 +311,7 @@ public abstract class BatchFix extends TermServerScript implements RF2Constants 
 			report (f);
 		} catch (InterruptedException | TermServerScriptException e) {
 			report(task, component, Severity.CRITICAL, ReportActionType.API_ERROR, getMessage(e));
-			if (++failureCount > maxFailures) {
+			if (++failureCount >= maxFailures) {
 				throw new TermServerScriptException ("Failure count exceeded " + maxFailures);
 			}
 		}

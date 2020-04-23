@@ -69,7 +69,7 @@ public class ReconcileSnapshot extends TermServerReport implements ReportClass {
 				.withDescription("This report validates all components in a generated snapshot (formed by " + 
 				"adding a delta to the previous release) against an exported snapshot.  Be aware that the " +
 				"snapshot export performed by this report will lock the relevant project for 15 minutes")
-				.withProductionStatus(ProductionStatus.PROD_READY)
+				.withProductionStatus(ProductionStatus.HIDEME)
 				.withTag(INT)
 				.build();
 	}

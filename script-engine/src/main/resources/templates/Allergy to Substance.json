@@ -1,0 +1,7 @@
+{
+  "name": "Allergy to substance",
+  "domain": "<<  419199007 |Allergy to substance (disorder)|",
+  "documentation": "https://confluence.ihtsdotools.org/display/SCTEMPLATES/Allergy+to+%5Bsubstance%5D+%28finding%29+v2+-+In+PROD",
+  "version": 1,
+  "logicalTemplate": "419199007 |Allergy to substance (finding)|  : [[~1..1 @rolegroup]] { [[~1..1]]  719722006 |Has realization (attribute)|  =  472964009 |Allergic process (qualifier value)| , [[~1..1]]  246075003 |Causative agent (attribute)|  = [[ +id (<<  105590001 |Substance (substance)|  ) @causative]] }"
+}
