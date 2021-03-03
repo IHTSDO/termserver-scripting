@@ -800,10 +800,7 @@ public class GraphLoader implements RF2Constants {
 	 */
 	public void populateHierarchyDepth(Concept startingPoint, int currentDepth) throws TermServerScriptException {
 		startingPoint.setDepth(currentDepth);
-		/*if (startingPoint.getConceptId().equals("210431006")) {
-			//TermServerScript.debug ("Checkpoint");
-		}*/
-		
+		startingPoint.setMaxDepth(currentDepth);
 		for (Concept child : startingPoint.getChildren(CharacteristicType.INFERRED_RELATIONSHIP)) {
 			if (currentDepth >= MAX_DEPTH) {
 				throw new TermServerScriptException("Maximum depth exceeded from " + startingPoint + " and inferred child " + child);
