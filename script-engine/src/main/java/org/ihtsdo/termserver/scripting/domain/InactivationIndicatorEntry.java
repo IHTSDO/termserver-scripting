@@ -1,18 +1,13 @@
 package org.ihtsdo.termserver.scripting.domain;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 
-//TODO Make this extend RefsetEntry
-//id	effectiveTime	active	moduleId	refsetId	referencedComponentId	inactivationReasonId
+//id	effectiveTime	active	moduleId	refsetId	referencedComponentId	valueId
 public class InactivationIndicatorEntry extends RefsetMember implements RF2Constants {
 
-	private String inactivationReasonId;
+	private static String VALUE_ID = "valueId";
 	
 	public InactivationIndicatorEntry clone(String newComponentSctId) {
 		InactivationIndicatorEntry clone = new InactivationIndicatorEntry();
@@ -22,7 +17,7 @@ public class InactivationIndicatorEntry extends RefsetMember implements RF2Const
 		clone.active = this.active;
 		clone.refsetId = this.refsetId;
 		clone.referencedComponentId = newComponentSctId;
-		clone.inactivationReasonId = this.inactivationReasonId;
+		clone.setInactivationReasonId(getInactivationReasonId());
 		clone.isDirty = true; //New components need to be written to any delta
 		return clone;
 	}
@@ -52,7 +47,7 @@ public class InactivationIndicatorEntry extends RefsetMember implements RF2Const
 	
 	public String toString() {
 		String activeIndicator = isActive()?"":"*";
-		return "[" + activeIndicator + "IA]:" + id + " - " + refsetId + " : " + referencedComponentId + "->" + inactivationReasonId;
+		return "[" + activeIndicator + "IA]:" + id + " - " + refsetId + " : " + referencedComponentId + "->" + getInactivationReasonId();
 	}
 	
 	public String[] toRF2() {
@@ -61,7 +56,7 @@ public class InactivationIndicatorEntry extends RefsetMember implements RF2Const
 				(active?"1":"0"),
 				moduleId, refsetId,
 				referencedComponentId,
-				inactivationReasonId
+				getInactivationReasonId()
 		};
 	}
 	
@@ -73,62 +68,18 @@ public class InactivationIndicatorEntry extends RefsetMember implements RF2Const
 				"1",
 				moduleId, refsetId,
 				referencedComponentId,
-				inactivationReasonId
+				getInactivationReasonId()
 		};
 	}
 
-	public String getId() {
-		return id;
-	}
-	public void setId(String id) {
-		this.id = id;
-	}
-	public String getEffectiveTime() {
-		return effectiveTime;
-	}
-	public void setEffectiveTime(String effectiveTime) {
-		if (this.effectiveTime != null && !this.effectiveTime.isEmpty() && effectiveTime == null) {
-			//Are we resetting this component to mark a change?
-			isDirty = true;
-		}
-		this.effectiveTime = effectiveTime;
-	}
-	public String getModuleId() {
-		return moduleId;
-	}
-	public void setModuleId(String moduleId) {
-		this.moduleId = moduleId;
-	}
-	public boolean isActive() {
-		return active;
-	}
-	public void setActive(boolean newActiveState) {
-		if (this.active != null && this.active != newActiveState) {
-			setDirty();
-			setEffectiveTime(null);
-		}
-		this.active = newActiveState;
-	}
-	public String getRefsetId() {
-		return refsetId;
-	}
-	public void setRefsetId(String refsetId) {
-		this.refsetId = refsetId;
-	}
-	public String getReferencedComponentId() {
-		return referencedComponentId;
-	}
-	public void setReferencedComponentId(String referencedComponentId) {
-		this.referencedComponentId = referencedComponentId;
-	}
 	public String getInactivationReasonId() {
-		return inactivationReasonId;
+		return getField(VALUE_ID);
 	}
 	public void setInactivationReasonId(String inactivationReasonId) {
-		if (this.inactivationReasonId != null && !this.inactivationReasonId.equals(inactivationReasonId)) {
+		if (getInactivationReasonId() != null && !getInactivationReasonId().equals(inactivationReasonId)) {
 			isDirty = true;
 		}
-		this.inactivationReasonId = inactivationReasonId;
+		setField(VALUE_ID,inactivationReasonId);
 	}
 
 	public static InactivationIndicatorEntry fromRf2(String[] lineItems) {
@@ -141,21 +92,6 @@ public class InactivationIndicatorEntry extends RefsetMember implements RF2Const
 		i.setReferencedComponentId(lineItems[INACT_IDX_REFCOMPID]);
 		i.setInactivationReasonId(lineItems[INACT_IDX_REASON_ID]);
 		return i;
-	}
-
-	@Override
-	public ComponentType getComponentType() {
-		return ComponentType.ATTRIBUTE_VALUE;
-	}
-
-	@Override
-	public String getReportedName() {
-		return getId();
-	}
-
-	@Override
-	public String getReportedType() {
-		return getComponentType().toString();
 	}
 	
 	@Override 

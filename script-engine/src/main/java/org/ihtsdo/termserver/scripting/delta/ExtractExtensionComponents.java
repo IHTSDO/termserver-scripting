@@ -254,10 +254,10 @@ public class ExtractExtensionComponents extends DeltaGenerator {
 	
 	private boolean moveAxiomToTargetModule(Concept c, AxiomEntry a, Concept conceptOnTS) throws TermServerScriptException {
 		try {
-			
-			if (a.getModuleId().equals(targetModuleId)) {
-				return false;
-			}
+			//Don't trust the local module, we might need to copy the data over anyway
+			//if (a.getModuleId().equals(targetModuleId)) {
+			//	return false;
+			//}
 			
 			//If we already have the concept on the Terminology Server, perhaps we already have the description too,
 			//Despite what the local file claims

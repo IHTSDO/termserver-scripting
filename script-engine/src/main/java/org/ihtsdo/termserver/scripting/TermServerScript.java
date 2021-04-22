@@ -634,8 +634,12 @@ public abstract class TermServerScript implements RF2Constants {
 	}
 	
 	protected RefsetMember loadRefsetMember(String uuid) throws TermServerScriptException {
-		debug ("Loading refset member " + uuid + " from " + project.getBranchPath());
-		return tsClient.getRefsetMember(uuid, project.getBranchPath());
+		return loadRefsetMember(uuid, project.getBranchPath());
+	}
+	
+	protected RefsetMember loadRefsetMember(String uuid, String branch) throws TermServerScriptException {
+		debug ("Loading refset member " + uuid + " from " +branch);
+		return tsClient.getRefsetMember(uuid, branch);
 	}
 	
 	protected RefsetMember loadPreviousRefsetMember(String uuid) throws TermServerScriptException {

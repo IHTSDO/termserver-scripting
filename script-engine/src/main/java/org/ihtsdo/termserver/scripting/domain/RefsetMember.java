@@ -1,7 +1,6 @@
 package org.ihtsdo.termserver.scripting.domain;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
@@ -36,10 +35,10 @@ RefsetMember extends Component {
 	protected  String referencedComponentId;
 	@SerializedName("additionalFields")
 	@Expose
-	protected  Map<String, String> additionalFields;
+	protected  Map<String, String> additionalFields = new HashMap<>();
 	@SerializedName("referencedComponent")
 	@Expose
-	protected Component referencedComponent;
+	protected Object referencedComponent;
 	@SerializedName("effectiveTime")
 	@Expose
 	protected  String effectiveTime;
@@ -138,12 +137,16 @@ RefsetMember extends Component {
 	public String getField(String key) {
 		return this.additionalFields.get(key);
 	}
-
-	public Component getReferencedComponent() {
-		return referencedComponent;
+	
+	public void setField(String key, String value) {
+		this.additionalFields.put(key, value);
 	}
 
-	public void setReferencedComponent(Component referencedComponent) {
+	/*public Object getReferencedComponent() {
+		return referencedComponent;
+	}*/
+
+	public void setReferencedComponent(Object referencedComponent) {
 		this.referencedComponent = referencedComponent;
 	}
 
@@ -158,7 +161,7 @@ RefsetMember extends Component {
 
 	@Override
 	public String getReportedType() {
-		throw new NotImplementedException();
+		return getComponentType().toString();
 	}
 
 	@Override
@@ -181,5 +184,10 @@ RefsetMember extends Component {
 			return !(effectiveTime == null || effectiveTime.isEmpty());
 		}
 		return released;
+	}
+	
+	public void delete (String deletionEffectiveTime) {
+		this.deletionEffectiveTime = deletionEffectiveTime;
+		this.isDeleted = true;
 	}
 }

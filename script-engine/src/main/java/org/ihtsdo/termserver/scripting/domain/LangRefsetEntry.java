@@ -8,13 +8,7 @@ import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 //id	effectiveTime	active	moduleId	refsetId	referencedComponentId	acceptabilityId
 public class LangRefsetEntry extends RefsetMember implements RF2Constants{
 
-	private String refsetId;
-	private String referencedComponentId;
-	private String acceptabilityId;
-	private boolean isDeleted = false;
-	private String deletionEffectiveTime;
-	
-	private Boolean released;
+	private static String ACCEPTABILITY_ID = "acceptabilityId";
 	
 	public LangRefsetEntry clone(String newDescriptionSctId) {
 		LangRefsetEntry clone = new LangRefsetEntry();
@@ -24,7 +18,7 @@ public class LangRefsetEntry extends RefsetMember implements RF2Constants{
 		clone.active = this.active;
 		clone.refsetId = this.refsetId;
 		clone.referencedComponentId = newDescriptionSctId;
-		clone.acceptabilityId = this.acceptabilityId;
+		clone.setAcceptabilityId(getAcceptabilityId());
 		clone.setDirty(); //New components need to be written to any delta
 		return clone;
 	}
@@ -35,7 +29,7 @@ public class LangRefsetEntry extends RefsetMember implements RF2Constants{
 				(active?"1":"0"),
 				moduleId, refsetId,
 				referencedComponentId,
-				acceptabilityId
+				getAcceptabilityId()
 		};
 	}
 	
@@ -47,40 +41,18 @@ public class LangRefsetEntry extends RefsetMember implements RF2Constants{
 				"1",
 				moduleId, refsetId,
 				referencedComponentId,
-				acceptabilityId
+				getAcceptabilityId()
 		};
 	}
 
-
-	public String getRefsetId() {
-		return refsetId;
-	}
-	public void setRefsetId(String refsetId) {
-		this.refsetId = refsetId;
-	}
-	public String getReferencedComponentId() {
-		return referencedComponentId;
-	}
-	public void setReferencedComponentId(String referencedComponentId) {
-		this.referencedComponentId = referencedComponentId;
-	}
 	public String getAcceptabilityId() {
-		return acceptabilityId;
+		return getField(ACCEPTABILITY_ID);
 	}
 	public void setAcceptabilityId(String acceptabilityId) {
-		if (this.acceptabilityId != null && !this.acceptabilityId.equals(acceptabilityId)) {
+		if (getAcceptabilityId() != null && !getAcceptabilityId().equals(acceptabilityId)) {
 			setDirty();
 		}
-		this.acceptabilityId = acceptabilityId;
-	}
-
-	public boolean isDeleted() {
-		return isDeleted;
-	}
-
-	public void delete(String deletionEffectiveTime) {
-		this.isDeleted = true;
-		this.deletionEffectiveTime = deletionEffectiveTime;
+		this.setField(ACCEPTABILITY_ID,acceptabilityId);
 	}
 	
 	public static LangRefsetEntry fromRf2 (String[] lineItems) {
@@ -132,18 +104,6 @@ public class LangRefsetEntry extends RefsetMember implements RF2Constants{
 	}
 
 	@Override
-	public String getReportedName() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getReportedType() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public ComponentType getComponentType() {
 		return ComponentType.LANGREFSET;
 	}
@@ -168,17 +128,9 @@ public class LangRefsetEntry extends RefsetMember implements RF2Constants{
 		entry.active = true;
 		entry.refsetId = refsetId;
 		entry.referencedComponentId = d.getDescriptionId();
-		entry.acceptabilityId = acceptabilityId;
+		entry.setAcceptabilityId(acceptabilityId);
 		entry.moduleId = SCTID_CORE_MODULE;
 		return entry;
-	}
-	
-	public Boolean isReleased() {
-		return released;
-	}
-
-	public void setReleased(Boolean released) {
-		this.released = released;
 	}
 
 }
