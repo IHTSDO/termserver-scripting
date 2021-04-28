@@ -31,7 +31,7 @@ public class INFRA6653_RetermPercentage extends BatchFix {
 			fix.populateEditPanel = false;
 			fix.selfDetermining = true;
 			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
+			fix.additionalReportColumns = "Action Detail, Additional Detail";
 			fix.init(args);
 			fix.getArchiveManager().setPopulateReleasedFlag(true);
 			fix.loadProjectSnapshot(false);
@@ -66,7 +66,10 @@ public class INFRA6653_RetermPercentage extends BatchFix {
 		String origPT = c.getPreferredSynonym(US_ENG_LANG_REFSET).getTerm();
 		String replacement;
 		for (Description d : originalDescriptions) {
-			 if (d.isPreferred() && d.getTerm().contains(search)) {
+			if (d.getType().equals(DescriptionType.TEXT_DEFINITION)) {
+				continue;
+			}
+			if (d.isPreferred() && d.getTerm().contains(search)) {
 				if (d.getType().equals(DescriptionType.FSN)) {
 					//Will we change the PT to be the same or do we need to do some extra work?
 					if (!origPT.equals(expectedPT)) {
@@ -75,7 +78,7 @@ public class INFRA6653_RetermPercentage extends BatchFix {
 				}
 				//If the % is the first thing, use a capital
 				if (d.getTerm().charAt(0) == '%') {
-					replacement = "Percentage " + d.getTerm().substring(1);
+					replacement = "Percentage " + d.getTerm().substring(1).replaceAll("  ", " ");
 				} else {
 					replacement = d.getTerm().replaceAll(search, replace);
 				}
@@ -97,7 +100,7 @@ public class INFRA6653_RetermPercentage extends BatchFix {
 				continue;
 			}
 			for (Description d : c.getDescriptions(ActiveState.ACTIVE)) {
-				if (d.isPreferred() && d.getTerm().contains(search)) {
+				if (d.isPreferred() && d.getTerm().contains(search) && !d.getType().equals(DescriptionType.TEXT_DEFINITION)) {
 					process.add(c);
 					continue nextConcept;
 				}
