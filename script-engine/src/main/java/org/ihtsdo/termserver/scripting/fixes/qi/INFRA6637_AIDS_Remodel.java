@@ -86,12 +86,30 @@ public class INFRA6637_AIDS_Remodel extends BatchFix {
 		int changesMade = 0;
 		List<Description> originalDescriptions = new ArrayList<>(c.getDescriptions(ActiveState.ACTIVE));
 		for (Description d : originalDescriptions) {
-
-			 if (d.getTerm().contains(" associated ")) {
-				String replacement = d.getTerm().replaceAll(" associated ", " ");
-				replaceDescription(t, c, d, replacement, null);
-				changesMade++;
-			 }
+			String replacement = d.getTerm();
+			boolean changeMade = false;
+			if (replacement.contains(" associated ")) {
+				replacement = replacement.replaceAll(" associated ", " ");
+				changeMade = true;
+			}
+			
+			if (replacement.contains("-associated")) {
+				replacement = replacement.replaceAll("-associated", "");
+				changeMade = true;
+			}
+			
+			if (replacement.contains("AIDS") && !replacement.toLowerCase().contains("acquired immunodeficiency syndrome")) {
+				if (replacement.contains("AIDS-")) {
+					replacement = replacement.replaceAll("AIDS-", "AIDS ");
+				}
+				replacement = replacement.replaceAll("AIDS", "AIDS (acquired immunodeficiency syndrome)");
+				changeMade = true;
+			}
+			
+			if (changeMade) {
+				replaceDescription(t, c, d, replacement, InactivationIndicator.NONCONFORMANCE_TO_EDITORIAL_POLICY, false);
+				changesMade++; 
+			}
 		}
 		return changesMade;
 	}
@@ -125,6 +143,7 @@ public class INFRA6637_AIDS_Remodel extends BatchFix {
 					potentialMatch = g.getGroupId();
 				} else if (g.containsType(rt)) {
 					//If it has the type but not the value, we can't use this group
+					potentialMatch = null;
 					continue nextGroup;
 				}
 			}
