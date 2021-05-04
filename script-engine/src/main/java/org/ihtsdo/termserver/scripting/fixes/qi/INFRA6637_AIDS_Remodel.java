@@ -31,6 +31,7 @@ public class INFRA6637_AIDS_Remodel extends BatchFix {
 		try {
 			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
 			fix.populateEditPanel = false;
+			fix.populateTaskDescription = false;
 			fix.selfDetermining = true;
 			fix.reportNoChange = true;
 			fix.additionalReportColumns = "Action Detail";
