@@ -29,6 +29,7 @@ public class INFRA6653_RetermPercentage extends BatchFix {
 		try {
 			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
 			fix.populateEditPanel = false;
+			fix.populateTaskDescription = false;
 			fix.selfDetermining = true;
 			fix.reportNoChange = true;
 			fix.additionalReportColumns = "Action Detail, Additional Detail";
@@ -78,9 +79,9 @@ public class INFRA6653_RetermPercentage extends BatchFix {
 				}
 				//If the % is the first thing, use a capital
 				if (d.getTerm().charAt(0) == '%') {
-					replacement = "Percentage " + d.getTerm().substring(1).replaceAll("  ", " ");
+					replacement = ("Percentage " + d.getTerm().substring(1)).replaceAll("  ", " ");
 				} else {
-					replacement = d.getTerm().replaceAll(search, replace);
+					replacement = d.getTerm().replaceAll(search, replace).replaceAll("  ", " ");
 				}
 				replaceDescription(t, c, d, replacement, InactivationIndicator.NONCONFORMANCE_TO_EDITORIAL_POLICY, true);
 				changesMade++;
@@ -96,7 +97,9 @@ public class INFRA6653_RetermPercentage extends BatchFix {
 		Set<Concept> products = PHARM_BIO_PRODUCT.getDescendents(NOT_SET);
 		nextConcept:
 		for (Concept c : gl.getAllConcepts()) {
-			if (products.contains(c) || c.getFsn().contains("(product)")) {
+			if (!c.isActive() || products.contains(c) 
+					|| c.getFsn().contains("(product)")
+					|| c.getFsn().contains("(physical object)")) {
 				continue;
 			}
 			for (Description d : c.getDescriptions(ActiveState.ACTIVE)) {
