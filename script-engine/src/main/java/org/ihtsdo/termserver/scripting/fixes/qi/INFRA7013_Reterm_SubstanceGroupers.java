@@ -13,9 +13,6 @@ import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.springframework.util.StringUtils;
 
-/**
- *INFRA-6637 Re-terming and remodel of AIDS concepts
- */
 public class INFRA7013_Reterm_SubstanceGroupers extends BatchFix {
 	
 	protected INFRA7013_Reterm_SubstanceGroupers(BatchFix clone) {
