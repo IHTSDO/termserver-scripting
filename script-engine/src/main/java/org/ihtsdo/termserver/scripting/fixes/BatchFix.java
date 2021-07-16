@@ -800,6 +800,10 @@ public abstract class BatchFix extends TermServerScript implements RF2Constants 
 		return replaceDescription(t, c, d, newTerm, indicator, false, "");
 	}
 	
+	protected Description replaceDescription(Task t, Concept c, Description d, String newTerm, InactivationIndicator indicator, boolean demotePT) throws TermServerScriptException {
+		return replaceDescription(t, c, d, newTerm, indicator, demotePT, "");
+	}
+	
 	protected Description replaceDescription(Task t, Concept c, Description d, String newTerm, InactivationIndicator indicator, boolean demotePT, String info) throws TermServerScriptException {
 		Description replacement = null;
 		Description reuseMe = c.findTerm(newTerm);

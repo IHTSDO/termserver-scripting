@@ -653,6 +653,22 @@ public class SnomedUtils implements RF2Constants {
 		}
 	}
 	
+	public static String prettyPrintHistoricalAssociations(Concept c, GraphLoader gl) throws TermServerScriptException {
+		String associations = "";
+		boolean isFirst = true;
+		for (AssociationEntry assoc : c.getAssociationEntries())  {
+			if (assoc.isActive()) {
+				if (!isFirst) {
+					associations += "\n";
+				} else {
+					isFirst = false;
+				}
+				associations += translateAssociation(assoc.getRefsetId()) + " " + gl.getConcept(assoc.getTargetComponentId());
+			}
+		}
+		return associations;
+	}
+	
 	public static File ensureFileExists(String fileName) throws TermServerScriptException {
 		if (StringUtils.isEmpty(fileName)) {
 			throw new TermServerScriptException ("Blank file name specified");

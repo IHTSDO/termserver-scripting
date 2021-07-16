@@ -25,6 +25,8 @@ public class GraphLoader implements RF2Constants {
 	private Map<String, Component> allComponents = null;
 	private Map<Component, Concept> componentOwnerMap = null;
 	private Map<String, Concept> fsnMap = null;
+	private Map<String, Concept> usptMap = null;
+	private Map<String, Concept> gbptMap = null;
 	private Set<String> excludedModules;
 	public static int MAX_DEPTH = 1000;
 	private Set<Concept> orphanetConcepts;
@@ -349,6 +351,34 @@ public class GraphLoader implements RF2Constants {
 		}
 		fsn = fsn.trim().replaceAll(ESCAPED_PIPE, "");
 		return fsnMap.get(fsn);
+	}
+	
+	public Concept findConceptByUSPT (String pt) throws TermServerScriptException {
+		//Populate the pt map if required
+		if (usptMap == null) {
+			usptMap = new HashMap<>();
+			for (Concept c : concepts.values()) {
+				Description thisPT = c.getPreferredSynonym(US_ENG_LANG_REFSET);
+				if (thisPT != null) {
+					usptMap.put(thisPT.getTerm().toLowerCase(), c);
+				}
+			}
+		}
+		return usptMap.get(pt.toLowerCase());
+	}
+	
+	public Concept findConceptByGBPT (String pt) throws TermServerScriptException {
+		//Populate the pt map if required
+		if (gbptMap == null) {
+			gbptMap = new HashMap<>();
+			for (Concept c : concepts.values()) {
+				Description thisPT = c.getPreferredSynonym(GB_ENG_LANG_REFSET);
+				if (thisPT != null) {
+					usptMap.put(thisPT.getTerm().toLowerCase(), c);
+				}
+			}
+		}
+		return gbptMap.get(pt.toLowerCase());
 	}
 	
 	private Relationship createRelationshipFromRF2(CharacteristicType charType, String[] lineItems) throws TermServerScriptException {
